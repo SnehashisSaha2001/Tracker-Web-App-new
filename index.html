@@ -926,7 +926,6 @@
         }
     });
 
-    
     // Pre-populate admin data and always overwrite to avoid corruption
     initialAdminData.forEach(admin => {
         const adminProfile = {
@@ -941,13 +940,25 @@
         console.log(`Force-loaded admin profile: ${admin.adminId}`);
     });
 
+    // --- NEW: Check for persistent login session ---
+    const lastLoggedInRole = localStorage.getItem('lastLoggedInRole');
+    const lastLoggedInEmployeeId = localStorage.getItem('lastLoggedInEmployeeId');
 
-
-    showSection('login');
-    // Hide sidebar buttons until logged in
-    document.querySelectorAll('.sidebar button:not(#loginBtn)').forEach(btn => btn.style.display = 'none');
-    document.getElementById('loginBtn').style.display = 'block';
-    document.getElementById('logoutBtn').style.display = 'none';
+    if (lastLoggedInRole && lastLoggedInEmployeeId) {
+        currentUserRole = lastLoggedInRole;
+        currentEmployeeId = lastLoggedInEmployeeId;
+        // Retrieve the full profile to update sidebar details correctly
+        const userProfile = getUserProfile(currentEmployeeId);
+        updateSidebarProfile(userProfile.name, userProfile.employeeId, userProfile.photoUrl);
+        login(); // Call the login function to set up UI and navigate to appropriate section
+    } else {
+        showSection('login');
+        // Hide sidebar buttons until logged in
+        document.querySelectorAll('.sidebar button:not(#loginBtn)').forEach(btn => btn.style.display = 'none');
+        document.getElementById('loginBtn').style.display = 'block';
+        document.getElementById('logoutBtn').style.display = 'none';
+    }
+    // --- END NEW ---
 
     document.getElementById('login-role').addEventListener('change', function() {
         const passwordGroup = document.getElementById('password-group');
@@ -1162,6 +1173,11 @@
       document.getElementById('logoutBtn').style.display = 'block';
       document.querySelectorAll('.sidebar button:not(#loginBtn):not(#logoutBtn)').forEach(btn => btn.style.display = 'block');
 
+      // --- NEW: Save session to localStorage ---
+      localStorage.setItem('lastLoggedInRole', currentUserRole);
+      localStorage.setItem('lastLoggedInEmployeeId', currentEmployeeId);
+      // --- END NEW ---
+
       if (currentUserRole === 'admin') {
           document.getElementById('employeeManagementBtn').style.display = 'block';
           document.getElementById('adminProfileBtn').style.display = 'block';
@@ -1189,6 +1205,12 @@
       currentUserRole = null;
       currentEmployeeId = null;
       stopLocationTracking(); // Ensure location tracking stops on logout
+
+      // --- NEW: Clear session from localStorage ---
+      localStorage.removeItem('lastLoggedInRole');
+      localStorage.removeItem('lastLoggedInEmployeeId');
+      // --- END NEW ---
+
       showAlert('Logged out successfully!');
       showSection('login');
       document.querySelectorAll('.sidebar button:not(#loginBtn)').forEach(btn => btn.style.display = 'none');
@@ -1205,7 +1227,7 @@
   const customConfirmModal = document.getElementById('customConfirmModal');
   const confirmMessage = document.getElementById('confirmMessage');
   const confirmYesButton = document.getElementById('confirmYes');
-  const confirmNoButton = document.getElementById('confirmNo');
+  const confirmNoButton = document = document.getElementById('confirmNo');
   let confirmCallback = null;
 
   let watchId = null; // Global variable to hold the watchPosition ID
